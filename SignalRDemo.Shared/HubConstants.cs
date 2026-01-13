@@ -13,7 +13,7 @@ public static class HubConstants
     /// <summary>
     /// 默认服务器地址
     /// </summary>
-    public const string DefaultServerUrl = "http://localhost:5072";
+    public const string DefaultServerUrl = "http://192.168.1.116:5072";
 
     /// <summary>
     /// 文件上传块大小 (32KB)

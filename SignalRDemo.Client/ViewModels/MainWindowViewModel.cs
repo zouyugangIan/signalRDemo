@@ -162,6 +162,24 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private bool CanSendMessage() => IsConnected && !string.IsNullOrWhiteSpace(Message);
 
+    [RelayCommand(CanExecute = nameof(CanSendCurrentMessage))]
+    private async Task SendCurrentMessageAsync()
+    {
+        if (IsPrivateChatMode)
+        {
+            await SendPrivateMessageAsync();
+        }
+        else
+        {
+            await SendMessageAsync();
+        }
+    }
+
+    private bool CanSendCurrentMessage()
+    {
+        return IsPrivateChatMode ? CanSendPrivateMessage() : CanSendMessage();
+    }
+
     [RelayCommand(CanExecute = nameof(CanSendPrivateMessage))]
     private async Task SendPrivateMessageAsync()
     {
@@ -403,6 +421,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DisconnectCommand.NotifyCanExecuteChanged();
         SendMessageCommand.NotifyCanExecuteChanged();
         SendPrivateMessageCommand.NotifyCanExecuteChanged();
+        SendCurrentMessageCommand.NotifyCanExecuteChanged();
         JoinRoomCommand.NotifyCanExecuteChanged();
         LeaveRoomCommand.NotifyCanExecuteChanged();
         SendRoomMessageCommand.NotifyCanExecuteChanged();
@@ -419,6 +438,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         SendMessageCommand.NotifyCanExecuteChanged();
         SendPrivateMessageCommand.NotifyCanExecuteChanged();
+        SendCurrentMessageCommand.NotifyCanExecuteChanged();
         SendRoomMessageCommand.NotifyCanExecuteChanged();
     }
 

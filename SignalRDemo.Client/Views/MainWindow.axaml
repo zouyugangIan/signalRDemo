@@ -146,7 +146,11 @@
                         <!-- 输入框 -->
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBox Text="{Binding Message}" Watermark="输入消息..." 
-                                     AcceptsReturn="False"/>
+                                     AcceptsReturn="False">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding SendCurrentMessageCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <Button Content="📤 私发" Command="{Binding SendPrivateMessageCommand}" 
                                         IsVisible="{Binding IsPrivateChatMode}"
