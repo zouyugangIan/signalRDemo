@@ -3,11 +3,17 @@ namespace SignalRDemo.Shared.DTOs;
 /// <summary>
 /// 聊天消息 DTO
 /// </summary>
+/// <param name="User">发送者</param>
+/// <param name="Message">消息内容</param>
+/// <param name="Timestamp">发送时间</param>
+/// <param name="Scope">消息作用域 (null/empty = Global, 否则为房间名)</param>
 public record ChatMessage(
     string User,
     string Message,
-    DateTime Timestamp
+    DateTime Timestamp,
+    string? Scope = null
 );
+
 
 /// <summary>
 /// 系统通知 DTO

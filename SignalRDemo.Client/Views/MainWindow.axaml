@@ -62,106 +62,153 @@
         <!-- 主内容区 -->
         <Grid Grid.Row="1" ColumnDefinitions="*,340">
             
-            <!-- 左侧: 聊天区域 -->
-            <Grid RowDefinitions="*,Auto,Auto" Margin="0,0,16,0">
+            <!-- 左侧内容区 -->
+            <Grid Grid.Row="1" ColumnDefinitions="200,*" Margin="0,0,16,0">
                 
-                <!-- 消息列表 -->
-                <Border Classes="card">
-                    <Grid RowDefinitions="Auto,*">
-                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="💬" FontSize="20"/>
-                                <TextBlock Text="消息" Classes="title"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="清空" 
-                                    Command="{Binding ClearMessagesCommand}" 
-                                    Classes="icon-btn" Padding="12,6"/>
-                        </Grid>
-                        
-                        <ScrollViewer Grid.Row="1">
-                            <ItemsControl ItemsSource="{Binding Messages}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type vm:ChatMessageViewModel}">
-                                        <Border Classes="message-bubble" Margin="0,4">
-                                            <Grid ColumnDefinitions="Auto,*">
-                                                <!-- 头像 -->
-                                                <Border Classes="avatar-small" Margin="0,0,12,0"
-                                                        VerticalAlignment="Top">
-                                                    <TextBlock Text="{Binding User, Converter={x:Static vm:NameToInitialConverter.Instance}}"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                               Foreground="White" FontWeight="Bold" FontSize="11"/>
-                                                </Border>
-                                                
-                                                <StackPanel Grid.Column="1">
-                                                    <StackPanel Orientation="Horizontal" Spacing="12">
-                                                        <TextBlock Text="{Binding User}" FontWeight="Bold" 
-                                                                   Foreground="#6366f1"/>
-                                                        <TextBlock Text="{Binding Time}" FontSize="11" 
-                                                                   Opacity="0.5"/>
-                                                    </StackPanel>
-                                                    <TextBlock Text="{Binding Content}" TextWrapping="Wrap" 
-                                                               Margin="0,6,0,0"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
+                <!-- 频道列表侧边栏 -->
+                <Border Grid.Column="0" Classes="card" Margin="0,0,12,0">
+                     <Grid RowDefinitions="Auto,*,Auto">
+                         <!-- 标题 -->
+                         <TextBlock Text="频道列表" Classes="title" Margin="0,0,0,12"/>
+                         
+                         <!-- 频道 List -->
+                         <ScrollViewer Grid.Row="1">
+                             <StackPanel Spacing="6">
+                                 <!-- 全局/私聊/已加入房间 -->
+                                 <ItemsControl ItemsSource="{Binding Channels}">
+                                     <ItemsControl.ItemTemplate>
+                                         <DataTemplate DataType="{x:Type vm:ChatChannelViewModel}">
+                                             <Border Classes="user-item-btn" Background="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedChannel, Converter={x:Static vm:SelectionToBackgroundConverter.Instance}, ConverterParameter={Binding}}"
+                                                     PointerPressedCommand="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).StartChatCommand}" 
+                                                     PointerPressedCommandParameter="{Binding}"
+                                                     Cursor="Hand">
+                                                 <!-- Note: Using Button for interaction is easier but listbox selection model is better. 
+                                                      Here trying to simulate channel list. -->
+                                                 <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedChannel, Mode=OneWayToSource}"
+                                                         CommandParameter="{Binding}"
+                                                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                                         Background="Transparent" BorderThickness="0">
+                                                     <!-- Actual Binding trick: We need to set SelectedChannel. 
+                                                          We use a Button command that executes a method to set it, or simple binding? -->
+                                                      <Grid ColumnDefinitions="Auto,*,Auto">
+                                                         <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontWeight="Medium"/>
+                                                         
+                                                         <Ellipse Grid.Column="2" Width="8" Height="8" Fill="#e74c3c" 
+                                                                  IsVisible="{Binding HasUnreadMessages}" Margin="8,0,0,0"/>
+                                                         
+                                                         <Button Grid.Column="2" Content="✕" Width="20" Height="20" Padding="0" FontSize="10"
+                                                                 Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CloseChannelCommand}"
+                                                                 CommandParameter="{Binding}"
+                                                                 IsVisible="{Binding Type, Converter={x:Static vm:ChannelTypeToBoolConverter.Instance}}"
+                                                                 Background="Transparent" Foreground="Gray" Margin="4,0,0,0"/>
+                                                      </Grid>
+                                                 </Button>
+                                             </Border>
+                                         </DataTemplate>
+                                     </ItemsControl.ItemTemplate>
+                                 </ItemsControl>
+                                 
+                                 <Separator Margin="0,8"/>
+                                 
+                                 <!-- 可加入的房间 -->
+                                 <TextBlock Text="可用房间" Opacity="0.6" FontSize="12" Margin="0,0,0,4"/>
+                                 <ItemsControl ItemsSource="{Binding AvailableRooms}">
+                                     <ItemsControl.ItemTemplate>
+                                         <DataTemplate>
+                                             <Button Content="{Binding RoomName}" 
+                                                     Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).JoinSelectedRoomCommand}"
+                                                     CommandParameter="{Binding}"
+                                                     HorizontalAlignment="Stretch" 
+                                                     HorizontalContentAlignment="Left"
+                                                     Background="#10ffffff" Margin="0,2">
+                                                 <Button.ContentTemplate>
+                                                      <DataTemplate>
+                                                           <Grid ColumnDefinitions="*,Auto">
+                                                               <TextBlock Text="{Binding RoomName}"/>
+                                                               <TextBlock Grid.Column="1" Text="{Binding UserCount, StringFormat='({0}人)'}" 
+                                                                          FontSize="11" Opacity="0.6"/>
+                                                           </Grid>
+                                                      </DataTemplate>
+                                                 </Button.ContentTemplate>
+                                             </Button>
+                                         </DataTemplate>
+                                     </ItemsControl.ItemTemplate>
+                                 </ItemsControl>
+                             </StackPanel>
+                         </ScrollViewer>
+                         
+                         <!-- 创建房间 -->
+                         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+                             <TextBox Text="{Binding NewRoomName}" Watermark="新房间名" Margin="0,0,8,0"/>
+                             <Button Grid.Column="1" Content="+" Command="{Binding CreateRoomCommand}" 
+                                     ToolTip.Tip="创建/加入房间"/>
+                         </Grid>
+                     </Grid>
                 </Border>
-                
-                <!-- 房间管理 -->
-                <Border Grid.Row="1" Classes="card" Margin="0,16,0,0">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
-                        <TextBlock Text="🏠" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <TextBox Grid.Column="1" Text="{Binding RoomName}" Watermark="房间名称"/>
-                        <Button Grid.Column="2" Content="加入" Command="{Binding JoinRoomCommand}" 
-                                Margin="8,0,0,0"/>
-                        <Button Grid.Column="3" Content="离开" Command="{Binding LeaveRoomCommand}" 
-                                Margin="8,0,0,0"/>
-                        <Button Grid.Column="4" Content="房间发送" Command="{Binding SendRoomMessageCommand}" 
-                                Margin="8,0,0,0" Classes="accent"/>
-                    </Grid>
-                </Border>
-                
-                <!-- 消息输入区 -->
-                <Border Grid.Row="2" Classes="card" Margin="0,16,0,0">
-                    <StackPanel Spacing="12">
-                        <!-- 私聊提示条 -->
-                        <Border Classes="private-chat-bar" IsVisible="{Binding IsPrivateChatMode}">
-                            <Grid ColumnDefinitions="*,Auto">
+
+                <!-- 中间: 聊天区域 -->
+                <Grid Grid.Column="1" RowDefinitions="*,Auto">
+                    
+                    <!-- 消息列表 -->
+                    <Border Classes="card" Margin="0,0,0,16">
+                        <Grid RowDefinitions="Auto,*">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="🔒" FontSize="16"/>
-                                    <TextBlock Text="私聊 " Foreground="White"/>
-                                    <TextBlock Text="{Binding TargetUser}" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="💬" FontSize="20"/>
+                                    <TextBlock Text="{Binding SelectedChannel.DisplayName, FallbackValue='选择频道'}" Classes="title"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="✕ 取消" 
-                                        Command="{Binding CancelPrivateChatCommand}"
-                                        Background="Transparent" Foreground="White" 
-                                        Padding="8,4" CornerRadius="4"/>
                             </Grid>
-                        </Border>
-                        
-                        <!-- 输入框 -->
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Text="{Binding Message}" Watermark="输入消息..." 
-                                     AcceptsReturn="False">
-                                <TextBox.KeyBindings>
-                                    <KeyBinding Gesture="Enter" Command="{Binding SendCurrentMessageCommand}" />
-                                </TextBox.KeyBindings>
-                            </TextBox>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button Content="📤 私发" Command="{Binding SendPrivateMessageCommand}" 
-                                        IsVisible="{Binding IsPrivateChatMode}"
-                                        Margin="12,0,0,0" Classes="accent"/>
-                                <Button Content="📤 发送" Command="{Binding SendMessageCommand}" 
-                                        IsVisible="{Binding !IsPrivateChatMode}"
-                                        Margin="12,0,0,0" Classes="accent"/>
-                            </StackPanel>
+                            
+                            <ScrollViewer Grid.Row="1">
+                                <ItemsControl ItemsSource="{Binding SelectedChannel.Messages}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:ChatMessageViewModel}">
+                                            <Border Classes="message-bubble" Margin="0,4">
+                                                <Grid ColumnDefinitions="Auto,*">
+                                                    <!-- 头像 -->
+                                                    <Border Classes="avatar-small" Margin="0,0,12,0"
+                                                            VerticalAlignment="Top">
+                                                        <TextBlock Text="{Binding User, Converter={x:Static vm:NameToInitialConverter.Instance}}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                   Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                                    </Border>
+                                                    
+                                                    <StackPanel Grid.Column="1">
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <TextBlock Text="{Binding User}" FontWeight="Bold" 
+                                                                       Foreground="#6366f1"/>
+                                                            <TextBlock Text="{Binding Time}" FontSize="11" 
+                                                                       Opacity="0.5"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap" 
+                                                                   Margin="0,6,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                         </Grid>
-                    </StackPanel>
-                </Border>
+                    </Border>
+                    
+                    <!-- 消息输入区 -->
+                    <Border Grid.Row="1" Classes="card">
+                        <StackPanel Spacing="12">
+                            <!-- 输入框 -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Text="{Binding Message}" Watermark="输入消息..." 
+                                         AcceptsReturn="False">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
+                                    </TextBox.KeyBindings>
+                                </TextBox>
+                                <Button Grid.Column="1" Content="📤 发送" Command="{Binding SendMessageCommand}" 
+                                        Margin="12,0,0,0" Classes="accent"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
             
             <!-- 右侧面板 -->

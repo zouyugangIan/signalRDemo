@@ -21,11 +21,13 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
 
     private readonly ILogger<ChatHub> _logger;
     private readonly SystemMonitorService _monitor;
+    private readonly RoomManager _roomManager;
 
-    public ChatHub(ILogger<ChatHub> logger, SystemMonitorService monitor)
+    public ChatHub(ILogger<ChatHub> logger, SystemMonitorService monitor, RoomManager roomManager)
     {
         _logger = logger;
         _monitor = monitor;
+        _roomManager = roomManager;
     }
 
     #region 连接生命周期
@@ -70,6 +72,14 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
             );
 
             await Clients.All.UserLeft(connectionStatus);
+            
+            // 清理用户所在的房间状态
+            var leftRooms = _roomManager.RemoveUserFromAllRooms(Context.ConnectionId);
+            foreach (var roomName in leftRooms)
+            {
+               // 可以在这里发送房间内的离开通知，如果需要的话
+               // 暂时只依赖全局的 UserLeft
+            }
 
             _logger.LogInformation("用户 {UserName} 已断开连接, ConnectionId: {ConnectionId}", userName, Context.ConnectionId);
         }
@@ -88,7 +98,7 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
 
     public async Task SendMessage(string user, string message)
     {
-        var chatMessage = new ChatMessage(user, message, DateTime.UtcNow);
+        var chatMessage = new ChatMessage(user, message, DateTime.UtcNow); // Scope = null (Global)
         await Clients.All.ReceiveMessage(chatMessage);
 
         _logger.LogInformation("消息已发送: {User} -> {Message}", user, message);
@@ -103,7 +113,7 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
 
         if (targetConnection.Key != null)
         {
-            var chatMessage = new ChatMessage(senderName, message, DateTime.UtcNow);
+            var chatMessage = new ChatMessage(senderName, message, DateTime.UtcNow, Scope: $"Private:{senderName}");
             // 发送私聊消息给目标用户
             await Clients.Client(targetConnection.Key).ReceivePrivateMessage(senderName, chatMessage);
             // 发送者也收到确认
@@ -133,9 +143,21 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
 
     #region 房间管理
 
-    public async Task JoinRoom(string roomName)
+    public Task<List<RoomInfo>> GetRooms()
+    {
+        return Task.FromResult(_roomManager.GetRooms());
+    }
+
+    public Task<RoomInfo> CreateRoom(string roomName)
+    {
+        var room = _roomManager.CreateRoom(roomName);
+        return Task.FromResult(room);
+    }
+
+    public async Task<RoomInfo> JoinRoom(string roomName)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
+        var roomInfo = _roomManager.AddUserToRoom(roomName, Context.ConnectionId);
 
         var userName = _onlineUsers.GetValueOrDefault(Context.ConnectionId, "Unknown");
         await Clients.Group(roomName).ReceiveNotification(new SystemNotification(
@@ -146,6 +168,8 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
         ));
 
         _logger.LogInformation("用户 {UserName} 加入房间 {RoomName}", userName, roomName);
+        
+        return roomInfo ?? new RoomInfo(roomName, 1);
     }
 
     public async Task LeaveRoom(string roomName)
@@ -153,6 +177,7 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
         var userName = _onlineUsers.GetValueOrDefault(Context.ConnectionId, "Unknown");
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
+        _roomManager.RemoveUserFromRoom(roomName, Context.ConnectionId);
 
         await Clients.Group(roomName).ReceiveNotification(new SystemNotification(
             "用户离开",
@@ -167,7 +192,7 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
     public async Task SendMessageToRoom(string roomName, string message)
     {
         var userName = _onlineUsers.GetValueOrDefault(Context.ConnectionId, "Unknown");
-        var chatMessage = new ChatMessage(userName, message, DateTime.UtcNow);
+        var chatMessage = new ChatMessage(userName, message, DateTime.UtcNow, Scope: roomName);
 
         await Clients.Group(roomName).ReceiveMessage(chatMessage);
 

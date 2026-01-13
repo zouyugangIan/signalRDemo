@@ -18,9 +18,19 @@ public interface IChatHub
     Task SendMessageToUser(string targetUser, string message);
 
     /// <summary>
+    /// 获取即时房间列表
+    /// </summary>
+    Task<List<RoomInfo>> GetRooms();
+
+    /// <summary>
+    /// 创建房间
+    /// </summary>
+    Task<RoomInfo> CreateRoom(string roomName);
+
+    /// <summary>
     /// 加入聊天房间
     /// </summary>
-    Task JoinRoom(string roomName);
+    Task<RoomInfo> JoinRoom(string roomName);
 
     /// <summary>
     /// 离开聊天房间

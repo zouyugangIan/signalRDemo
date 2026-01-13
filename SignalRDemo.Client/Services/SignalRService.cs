@@ -45,7 +45,9 @@ public interface ISignalRService : IAsyncDisposable
     Task SendMessageToUserAsync(string targetUser, string message);
 
     // 房间管理
-    Task JoinRoomAsync(string roomName);
+    Task<List<RoomInfo>> GetRoomsAsync();
+    Task<RoomInfo> CreateRoomAsync(string roomName);
+    Task<RoomInfo> JoinRoomAsync(string roomName);
     Task LeaveRoomAsync(string roomName);
     Task SendMessageToRoomAsync(string roomName, string message);
 
@@ -127,6 +129,18 @@ public class SignalRService : ISignalRService
         _connection.On<ChatMessage>("ReceiveMessage", message =>
             MessageReceived?.Invoke(message));
 
+        _connection.On<string, ChatMessage>("ReceivePrivateMessage", (from, message) =>
+        {
+            // 私聊消息也通过统一事件分发，但 Scope 会标记
+            // 这里为了简单，我们也可以依然触发 MessageReceived，因为 ChatMessage 已经有了 Scope
+            if (string.IsNullOrEmpty(message.Scope))
+            {
+                // 如果后端没填 Scope，或者是旧代码，我们手动补全
+                message = message with { Scope = $"Private:{from}" };
+            }
+            MessageReceived?.Invoke(message);
+        });
+
         // 接收通知
         _connection.On<SystemNotification>("ReceiveNotification", notification =>
             NotificationReceived?.Invoke(notification));
@@ -197,12 +211,31 @@ public class SignalRService : ISignalRService
         }
     }
 
-    public async Task JoinRoomAsync(string roomName)
+    public async Task<List<RoomInfo>> GetRoomsAsync()
     {
         if (_connection?.State == HubConnectionState.Connected)
         {
-            await _connection.InvokeAsync("JoinRoom", roomName);
+            return await _connection.InvokeAsync<List<RoomInfo>>("GetRooms");
         }
+        return [];
+    }
+
+    public async Task<RoomInfo> CreateRoomAsync(string roomName)
+    {
+        if (_connection?.State == HubConnectionState.Connected)
+        {
+            return await _connection.InvokeAsync<RoomInfo>("CreateRoom", roomName);
+        }
+        return new RoomInfo(roomName, 0);
+    }
+
+    public async Task<RoomInfo> JoinRoomAsync(string roomName)
+    {
+        if (_connection?.State == HubConnectionState.Connected)
+        {
+            return await _connection.InvokeAsync<RoomInfo>("JoinRoom", roomName);
+        }
+        return new RoomInfo(roomName, 0);
     }
 
     public async Task LeaveRoomAsync(string roomName)

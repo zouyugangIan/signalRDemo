@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<SystemMonitorService>();
+builder.Services.AddSingleton<RoomManager>();
 
 // 配置 SignalR
 builder.Services.AddSignalR(options =>

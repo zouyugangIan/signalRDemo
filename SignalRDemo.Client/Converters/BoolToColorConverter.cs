@@ -48,3 +48,42 @@ public class NameToInitialConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+public class ChannelTypeToBoolConverter : IValueConverter
+{
+    public static readonly ChannelTypeToBoolConverter Instance = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is ChannelType type)
+        {
+            return type != ChannelType.Global;
+        }
+        return false;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class SelectionToBackgroundConverter : IValueConverter
+{
+    public static readonly SelectionToBackgroundConverter Instance = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        // value is SelectedChannel, parameter is CurrentItem (Binding)
+        if (value == parameter)
+        {
+             return new SolidColorBrush(Color.Parse("#20ffffff"));
+        }
+        return Brushes.Transparent;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
