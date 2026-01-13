@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalR Chat - Real-time Communication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <style>
+        :root {
+            --bg-gradient-start: #0a0a1a;
+            --bg-gradient-end: #1a1a3a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888aa;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --private-color: #ec4899;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15), transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15), transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Connection */
+        .connection-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .connection-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .status-dot.connecting {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        input,
+        select {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Messages */
+        .messages-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border-left: 3px solid var(--accent-primary);
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.private {
+            background: rgba(236, 72, 153, 0.1);
+            border-left-color: var(--private-color);
+        }
+
+        .message.private::before {
+            content: '🔒 私聊';
+            font-size: 10px;
+            color: var(--private-color);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .message-user {
+            font-weight: 600;
+            color: var(--accent-primary);
+            font-size: 13px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .message-content {
+            padding-left: 42px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-style: italic;
+            display: none;
+        }
+
+        .typing-indicator.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 6px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-4px);
+            }
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            align-items: center;
+        }
+
+        .input-area input {
+            flex: 1;
+        }
+
+        .emoji-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .emoji-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            background: rgba(20, 20, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .emoji-picker.show {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .emoji-item {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .emoji-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.2);
+        }
+
+        /* Private Chat */
+        .private-chat-bar {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(236, 72, 153, 0.15);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .private-chat-bar.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .private-chat-bar span {
+            color: var(--private-color);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        /* Users */
+        .users-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .user-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border: 2px solid var(--bg-gradient-start);
+            border-radius: 50%;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .user-status {
+            font-size: 11px;
+            color: var(--success);
+        }
+
+        .user-chat-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .user-item:hover .user-chat-btn {
+            opacity: 1;
+        }
+
+        /* Monitoring */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .monitor-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .monitor-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .monitor-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Notifications */
+        .notifications-container {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .notification {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--accent-primary);
+            animation: slideIn 0.3s;
+            font-size: 13px;
+        }
+
+        .notification.success {
+            border-color: var(--success);
+        }
+
+        .notification.warning {
+            border-color: var(--warning);
+        }
+
+        .notification.error {
+            border-color: var(--error);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .notification-content {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* Room */
+        .room-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* File Upload */
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .file-preview {
+            display: none;
+            padding: 10px 14px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .file-preview.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            transition: width 0.3s;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>✨ SignalR Chat</h1>
+            <p>实时通信演示 · Private Chat · File Sharing · Emoji</p>
+        </header>
+
+        <!-- Connection -->
+        <div class="card connection-card">
+            <div class="connection-bar">
+                <div class="status-badge">
+                    <div class="status-dot" id="statusIndicator"></div>
+                    <span id="statusText">未连接</span>
+                </div>
+                <input type="text" id="serverUrl" placeholder="服务器地址" style="width: 240px;">
+                <input type="text" id="userName" placeholder="您的昵称" style="width: 120px;">
+                <button class="btn-primary" id="connectBtn" onclick="connect()">🚀 连接</button>
+                <button class="btn-danger" id="disconnectBtn" onclick="disconnect()" disabled>⏹️ 断开</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <!-- Messages -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">💬 聊天消息</div>
+                        <button class="btn-secondary btn-sm" onclick="clearMessages()">清空</button>
+                    </div>
+
+                    <!-- Private Chat Bar -->
+                    <div class="private-chat-bar" id="privateChatBar">
+                        <span>🔒 私聊: <strong id="privateChatTarget"></strong></span>
+                        <button class="btn-secondary btn-sm" onclick="cancelPrivateChat()">取消</button>
+                    </div>
+
+                    <div class="messages-container" id="messagesContainer">
+                        <div class="empty-state" id="emptyMessages">
+                            <div class="icon">💭</div>
+                            <p>开始聊天吧！</p>
+                        </div>
+                    </div>
+
+                    <div class="typing-indicator" id="typingIndicator">
+                        <span id="typingUser"></span> 正在输入
+                        <span class="typing-dots"><span></span><span></span><span></span></span>
+                    </div>
+
+                    <div class="input-area" style="position: relative;">
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()"
+                            title="发送文件">📎</button>
+                        <input type="file" id="fileInput" class="file-input" onchange="handleFileSelect(event)">
+                        <input type="text" id="messageInput" placeholder="输入消息... 按 Enter 发送"
+                            onkeypress="handleKeyPress(event)" oninput="handleTyping()">
+                        <button class="emoji-btn" onclick="toggleEmojiPicker()" title="表情">😀</button>
+                        <button class="btn-primary" onclick="sendMessage()" id="sendBtn" disabled>发送 ➤</button>
+
+                        <div class="emoji-picker" id="emojiPicker"></div>
+                    </div>
+
+                    <div class="file-preview" id="filePreview">
+                        <span>📄</span>
+                        <span id="fileName"></span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <button class="btn-secondary btn-sm" onclick="cancelFile()">✕</button>
+                    </div>
+                </div>
+
+                <!-- Room -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🏠 房间管理</div>
+                    </div>
+                    <div class="room-controls">
+                        <input type="text" id="roomName" placeholder="房间名称" value="General" style="width: 160px;">
+                        <button class="btn-secondary" onclick="joinRoom()" id="joinRoomBtn" disabled>加入</button>
+                        <button class="btn-secondary" onclick="leaveRoom()" id="leaveRoomBtn" disabled>离开</button>
+                        <button class="btn-primary" onclick="sendRoomMessage()" id="roomMsgBtn" disabled>发送到房间</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <!-- Monitoring -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📊 实时监控</div>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn-secondary btn-sm" onclick="startMonitoring()" id="startMonitorBtn"
+                                disabled>开始</button>
+                            <button class="btn-secondary btn-sm" onclick="stopMonitoring()" id="stopMonitorBtn"
+                                disabled>停止</button>
+                        </div>
+                    </div>
+                    <div class="monitor-grid">
+                        <div class="monitor-item">
+                            <div class="monitor-value" id="cpuValue">0.0%</div>
+                            <div class="monitor-label">CPU</div>
+                        </div>
+                        <div class="monitor-item">
+                            <div class="monitor-value" id="memValue">0.0%</div>
+                            <div class="monitor-label">内存</div>
+                        </div>
+                        <div class="monitor-item">
+                            <div class="monitor-value" id="netInValue">0.0</div>
+                            <div class="monitor-label">入站 MB/s</div>
+                        </div>
+                        <div class="monitor-item">
+                            <div class="monitor-value" id="netOutValue">0.0</div>
+                            <div class="monitor-label">出站 MB/s</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">👥 在线用户 <span id="userCount"
+                                style="background: var(--accent-gradient); padding: 2px 8px; border-radius: 12px; font-size: 11px;">0</span>
+                        </div>
+                        <button class="btn-secondary btn-sm" onclick="refreshUsers()" id="refreshUsersBtn"
+                            disabled>刷新</button>
+                    </div>
+                    <div class="users-list" id="usersList">
+                        <div class="empty-state" style="padding: 16px;">
+                            <p>暂无在线用户</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">🔔 通知</div>
+                        <button class="btn-secondary btn-sm" onclick="clearNotifications()">清空</button>
+                    </div>
+                    <div class="notifications-container" id="notificationsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notificationSound" preload="auto">
+        <source
+            src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNBrwKAAAAAAD/+9DEAAAH8ANpAAAAEkmMbWlAAAACQAH//5Tf5QAL//qb/0IBj/+pgMP/6kB//9TA//+pgcQAAAATRo0aNGjRo0aNGjZs2bNmzZs2bNmzRo0aNGjRo0aNGjRo0aNGjRo0aNGjRo2bNmzZs2bNmzZs2bNGjRo0aNGjRo0aNGjRo0aNGjRo0aNGjRs2bNmzZs2bNmzZo0aNGjRo0aNGjRo0aNGjRo0aNGjRo0bNmzZs2bNmzZs0aNGjRo0aNGjRo0aNGjRo0aNGjRo0aNmzZs2bNmzZs2aNGjRo3/+9DEGwPAAADSAAAAAgAANIAAAAT////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+            type="audio/mp3">
+    </audio>
+
+    <script>
+        let connection = null;
+        let monitoringStream = null;
+        let privateTarget = null;
+        let selectedFile = null;
+        let typingTimeout = null;
+        let isTyping = false;
+        let typingUsers = new Set();
+
+        // Emoji list
+        const emojis = ['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '😜', '🤔', '😎', '🥳', '😢', '😭', '😤', '🤯', '🥺', '👍', '👎', '👏', '🙌', '💪', '🔥', '❤️', '💔', '⭐', '🎉', '🎊', '💯', '✨', '🚀', '💬', '📎', '🔒', '👋', '✅', '❌', '⚡', '💡', '🎵', '🎮'];
+
+        // Initialize
+        document.getElementById('userName').value = 'User_' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('serverUrl').value = window.location.origin;
+        initEmojiPicker();
+        requestNotificationPermission();
+
+        function initEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.innerHTML = '<div class="emoji-grid">' +
+                emojis.map(e => `<div class="emoji-item" onclick="insertEmoji('${e}')">${e}</div>`).join('') +
+                '</div>';
+        }
+
+        function toggleEmojiPicker() {
+            document.getElementById('emojiPicker').classList.toggle('show');
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            toggleEmojiPicker();
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function showDesktopNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: '💬' });
+            }
+        }
+
+        function playSound() {
+            const audio = document.getElementById('notificationSound');
+            audio.currentTime = 0;
+            audio.play().catch(() => { });
+        }
+
+        async function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const userName = document.getElementById('userName').value;
+
+            if (!serverUrl || !userName) {
+                addNotification('错误', '请填写服务器地址和用户名', 'error');
+                return;
+            }
+
+            updateStatus('connecting');
+
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(`${serverUrl}/hubs/chat?user=${encodeURIComponent(userName)}`)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                    .build();
+
+                // Public message
+                connection.on('ReceiveMessage', (msg) => {
+                    addMessage(msg.user, msg.message, msg.timestamp, false);
+                    if (msg.user !== userName) {
+                        playSound();
+                        showDesktopNotification(`💬 ${msg.user}`, msg.message);
+                    }
+                });
+
+                // Private message
+                connection.on('ReceivePrivateMessage', (fromUser, msg) => {
+                    addMessage(msg.user, msg.message, msg.timestamp, true, fromUser);
+                    playSound();
+                    showDesktopNotification(`🔒 私聊 - ${msg.user}`, msg.message);
+                });
+
+                // Typing indicator
+                connection.on('UserTyping', (user, typing) => {
+                    if (typing) typingUsers.add(user);
+                    else typingUsers.delete(user);
+                    updateTypingIndicator();
+                });
+
+                connection.on('ReceiveNotification', (n) => {
+                    addNotification(n.title, n.content, ['info', 'warning', 'error', 'success'][n.type] || 'info');
+                });
+
+                connection.on('UserJoined', (u) => {
+                    addNotification('👋 上线', `${u.userName} 加入了聊天`, 'success');
+                    refreshUsers();
+                    playSound();
+                });
+
+                connection.on('UserLeft', (u) => {
+                    addNotification('👋 离线', `${u.userName} 离开了`, 'info');
+                    typingUsers.delete(u.userName);
+                    updateTypingIndicator();
+                    refreshUsers();
+                });
+
+                connection.onreconnecting(() => {
+                    updateStatus('connecting');
+                    addNotification('🔄 重连中', '正在尝试重新连接...', 'warning');
+                });
+
+                connection.onreconnected(() => {
+                    updateStatus('connected');
+                    addNotification('✅ 重连成功', '已重新连接', 'success');
+                });
+
+                connection.onclose(() => {
+                    updateStatus('disconnected');
+                    setButtonsEnabled(false);
+                });
+
+                await connection.start();
+                updateStatus('connected');
+                setButtonsEnabled(true);
+                refreshUsers();
+
+            } catch (error) {
+                updateStatus('disconnected');
+                addNotification('连接失败', error.message, 'error');
+            }
+        }
+
+        async function disconnect() {
+            if (connection) {
+                stopMonitoring();
+                await connection.stop();
+                connection = null;
+            }
+            updateStatus('disconnected');
+            setButtonsEnabled(false);
+        }
+
+        function handleTyping() {
+            if (!connection) return;
+
+            if (!isTyping) {
+                isTyping = true;
+                connection.invoke('SendTypingStatus', true);
+            }
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                connection.invoke('SendTypingStatus', false);
+            }, 2000);
+        }
+
+        function updateTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            const userSpan = document.getElementById('typingUser');
+
+            if (typingUsers.size > 0) {
+                const users = Array.from(typingUsers);
+                userSpan.textContent = users.length > 2
+                    ? `${users[0]} 等 ${users.length} 人`
+                    : users.join('、');
+                indicator.classList.add('show');
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const msg = input.value.trim();
+            if (!msg || !connection) return;
+
+            // Stop typing
+            isTyping = false;
+            connection.invoke('SendTypingStatus', false);
+
+            if (privateTarget) {
+                await connection.invoke('SendMessageToUser', privateTarget, msg);
+            } else {
+                await connection.invoke('SendMessage', document.getElementById('userName').value, msg);
+            }
+            input.value = '';
+        }
+
+        function startPrivateChat(userName) {
+            if (userName === document.getElementById('userName').value) return;
+
+            privateTarget = userName;
+            document.getElementById('privateChatTarget').textContent = userName;
+            document.getElementById('privateChatBar').classList.add('show');
+            document.getElementById('messageInput').focus();
+        }
+
+        function cancelPrivateChat() {
+            privateTarget = null;
+            document.getElementById('privateChatBar').classList.remove('show');
+        }
+
+        function handleFileSelect(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                document.getElementById('fileName').textContent = selectedFile.name;
+                document.getElementById('filePreview').classList.add('show');
+            }
+        }
+
+        function cancelFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').classList.remove('show');
+        }
+
+        async function joinRoom() {
+            const room = document.getElementById('roomName').value;
+            if (!room || !connection) return;
+            await connection.invoke('JoinRoom', room);
+        }
+
+        async function leaveRoom() {
+            const room = document.getElementById('roomName').value;
+            if (!room || !connection) return;
+            await connection.invoke('LeaveRoom', room);
+        }
+
+        async function sendRoomMessage() {
+            const input = document.getElementById('messageInput');
+            const room = document.getElementById('roomName').value;
+            const msg = input.value.trim();
+            if (!msg || !room || !connection) return;
+
+            await connection.invoke('SendMessageToRoom', room, msg);
+            input.value = '';
+        }
+
+        async function refreshUsers() {
+            if (!connection) return;
+            const users = await connection.invoke('GetOnlineUsers');
+            const container = document.getElementById('usersList');
+            const myName = document.getElementById('userName').value;
+
+            document.getElementById('userCount').textContent = users.length;
+
+            if (users.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 16px;"><p>暂无在线用户</p></div>';
+                return;
+            }
+
+            container.innerHTML = users.map(u => `
+                <div class="user-item" onclick="startPrivateChat('${escapeHtml(u.userName)}')">
+                    <div class="user-avatar">${u.userName.charAt(0).toUpperCase()}</div>
+                    <div class="user-info">
+                        <div class="user-name">${escapeHtml(u.userName)}${u.userName === myName ? ' (我)' : ''}</div>
+                        <div class="user-status">在线</div>
+                    </div>
+                    ${u.userName !== myName ? '<button class="btn-secondary user-chat-btn">私聊</button>' : ''}
+                </div>
+            `).join('');
+        }
+
+        async function startMonitoring() {
+            if (!connection || monitoringStream) return;
+            document.getElementById('startMonitorBtn').disabled = true;
+            document.getElementById('stopMonitorBtn').disabled = false;
+
+            try {
+                monitoringStream = connection.stream('StreamMonitoringData');
+                monitoringStream.subscribe({
+                    next: (d) => {
+                        document.getElementById('cpuValue').textContent = d.cpuUsage.toFixed(1) + '%';
+                        document.getElementById('memValue').textContent = d.memoryUsage.toFixed(1) + '%';
+                        document.getElementById('netInValue').textContent = d.networkIn.toFixed(1);
+                        document.getElementById('netOutValue').textContent = d.networkOut.toFixed(1);
+                    },
+                    complete: () => {
+                        document.getElementById('startMonitorBtn').disabled = false;
+                        document.getElementById('stopMonitorBtn').disabled = true;
+                    }
+                });
+            } catch (e) {
+                addNotification('监控错误', e.message, 'error');
+            }
+        }
+
+        function stopMonitoring() {
+            monitoringStream = null;
+            document.getElementById('startMonitorBtn').disabled = !connection;
+            document.getElementById('stopMonitorBtn').disabled = true;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function addMessage(user, content, timestamp, isPrivate = false, partner = null) {
+            const container = document.getElementById('messagesContainer');
+            const empty = document.getElementById('emptyMessages');
+            if (empty) empty.remove();
+
+            const time = new Date(timestamp).toLocaleTimeString();
+            const initial = user.charAt(0).toUpperCase();
+
+            container.innerHTML += `
+                <div class="message ${isPrivate ? 'private' : ''}">
+                    <div class="message-header">
+                        <div class="message-avatar">${initial}</div>
+                        <span class="message-user">${escapeHtml(user)}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(content)}</div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addNotification(title, content, type = 'info') {
+            const container = document.getElementById('notificationsContainer');
+            const time = new Date().toLocaleTimeString();
+
+            container.innerHTML = `
+                <div class="notification ${type}">
+                    <div class="notification-header">
+                        <span class="notification-title">${escapeHtml(title)}</span>
+                        <span class="notification-time">${time}</span>
+                    </div>
+                    <div class="notification-content">${escapeHtml(content)}</div>
+                </div>
+            ` + container.innerHTML;
+        }
+
+        function clearMessages() {
+            document.getElementById('messagesContainer').innerHTML = `
+                <div class="empty-state" id="emptyMessages"><div class="icon">💭</div><p>开始聊天吧！</p></div>
+            `;
+        }
+
+        function clearNotifications() {
+            document.getElementById('notificationsContainer').innerHTML = '';
+        }
+
+        function updateStatus(status) {
+            const dot = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            dot.className = 'status-dot ' + status;
+            text.textContent = { 'connected': '已连接', 'connecting': '连接中...', 'disconnected': '未连接' }[status] || '未连接';
+        }
+
+        function setButtonsEnabled(enabled) {
+            document.getElementById('connectBtn').disabled = enabled;
+            document.getElementById('disconnectBtn').disabled = !enabled;
+            document.getElementById('sendBtn').disabled = !enabled;
+            document.getElementById('joinRoomBtn').disabled = !enabled;
+            document.getElementById('leaveRoomBtn').disabled = !enabled;
+            document.getElementById('roomMsgBtn').disabled = !enabled;
+            document.getElementById('startMonitorBtn').disabled = !enabled;
+            document.getElementById('refreshUsersBtn').disabled = !enabled;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close emoji picker on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.emoji-btn') && !e.target.closest('.emoji-picker')) {
+                document.getElementById('emojiPicker').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+
+</html>
