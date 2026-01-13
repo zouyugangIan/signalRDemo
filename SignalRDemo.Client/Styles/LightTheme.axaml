@@ -1,0 +1,306 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- 现代浅色主题 - Modern Light Theme -->
+    <Style>
+        <Style.Resources>
+            <!-- 主色调 -->
+            <Color x:Key="AccentColor">#6366f1</Color>
+            <Color x:Key="AccentLightColor">#818cf8</Color>
+            <Color x:Key="AccentDarkColor">#4f46e5</Color>
+            
+            <!-- 背景色 -->
+            <Color x:Key="BackgroundPrimaryColor">#f8f9fc</Color>
+            <Color x:Key="BackgroundSecondaryColor">#f0f2f8</Color>
+            <Color x:Key="BackgroundTertiaryColor">#e8ebf4</Color>
+            <Color x:Key="CardBackgroundColor">#ffffff</Color>
+            
+            <!-- 文字色 -->
+            <Color x:Key="TextPrimaryColor">#1a1a2e</Color>
+            <Color x:Key="TextSecondaryColor">#4a4a6a</Color>
+            <Color x:Key="TextMutedColor">#9090a5</Color>
+            
+            <!-- 边框和分割线 -->
+            <Color x:Key="BorderColor">#e0e4ed</Color>
+            <Color x:Key="BorderLightColor">#d0d4dd</Color>
+            
+            <!-- 状态色 -->
+            <Color x:Key="SuccessColor">#10b981</Color>
+            <Color x:Key="WarningColor">#f59e0b</Color>
+            <Color x:Key="ErrorColor">#ef4444</Color>
+            <Color x:Key="InfoColor">#3b82f6</Color>
+            
+            <!-- 渐变 -->
+            <LinearGradientBrush x:Key="AccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#6366f1" Offset="0"/>
+                <GradientStop Color="#8b5cf6" Offset="0.5"/>
+                <GradientStop Color="#a855f7" Offset="1"/>
+            </LinearGradientBrush>
+            
+            <LinearGradientBrush x:Key="BackgroundGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#f8f9fc" Offset="0"/>
+                <GradientStop Color="#f0f2f8" Offset="1"/>
+            </LinearGradientBrush>
+            
+            <!-- 画笔 -->
+            <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource AccentColor}"/>
+            <SolidColorBrush x:Key="BackgroundPrimaryBrush" Color="{DynamicResource BackgroundPrimaryColor}"/>
+            <SolidColorBrush x:Key="BackgroundSecondaryBrush" Color="{DynamicResource BackgroundSecondaryColor}"/>
+            <SolidColorBrush x:Key="CardBackgroundBrush" Color="{DynamicResource CardBackgroundColor}"/>
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{DynamicResource TextPrimaryColor}"/>
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="{DynamicResource TextSecondaryColor}"/>
+            <SolidColorBrush x:Key="BorderBrush" Color="{DynamicResource BorderColor}"/>
+        </Style.Resources>
+    </Style>
+    
+    <!-- 窗口背景 -->
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource BackgroundGradient}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+    
+    <!-- 卡片样式 -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="BoxShadow" Value="0 2 12 #10000000"/>
+    </Style>
+    
+    <Style Selector="Border.card:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderLightColor}"/>
+        <Setter Property="BoxShadow" Value="0 4 20 #15000000"/>
+    </Style>
+    
+    <!-- 标题样式 -->
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.subtitle">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+    
+    <!-- 按钮样式 -->
+    <Style Selector="Button">
+        <Setter Property="Background" Value="{DynamicResource BackgroundTertiaryColor}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16,10"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    
+    <Style Selector="Button:pointerover">
+        <Setter Property="Background" Value="#d0d4dd"/>
+    </Style>
+    
+    <Style Selector="Button:pressed">
+        <Setter Property="Background" Value="#c0c4cd"/>
+    </Style>
+    
+    <Style Selector="Button.accent">
+        <Setter Property="Background" Value="{DynamicResource AccentGradient}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
+    <Style Selector="Button.accent:pointerover">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    
+    <Style Selector="Button.accent:pressed">
+        <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+    
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource ErrorColor}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
+    <Style Selector="Button.success">
+        <Setter Property="Background" Value="{DynamicResource SuccessColor}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    
+    <Style Selector="Button.icon-btn">
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="MinWidth" Value="36"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="18"/>
+    </Style>
+    
+    <Style Selector="Button.icon-btn:pointerover">
+        <Setter Property="Background" Value="#10000000"/>
+    </Style>
+    
+    <!-- 输入框样式 -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedColor}"/>
+    </Style>
+    
+    <!-- 列表样式 -->
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    
+    <Style Selector="ListBoxItem:pointerover">
+        <Setter Property="Background" Value="#08000000"/>
+    </Style>
+    
+    <Style Selector="ListBoxItem:selected">
+        <Setter Property="Background" Value="#10000000"/>
+    </Style>
+    
+    <!-- 进度条样式 -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Background" Value="{DynamicResource BackgroundTertiaryColor}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentGradient}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="MinHeight" Value="8"/>
+    </Style>
+    
+    <Style Selector="ProgressBar /template/ Border#PART_Indicator">
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    
+    <!-- 分割线 -->
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="0,8"/>
+    </Style>
+    
+    <!-- 状态指示器 -->
+    <Style Selector="Ellipse.status-online">
+        <Setter Property="Fill" Value="{DynamicResource SuccessColor}"/>
+        <Setter Property="Width" Value="10"/>
+        <Setter Property="Height" Value="10"/>
+    </Style>
+    
+    <Style Selector="Ellipse.status-offline">
+        <Setter Property="Fill" Value="{DynamicResource TextMutedColor}"/>
+        <Setter Property="Width" Value="10"/>
+        <Setter Property="Height" Value="10"/>
+    </Style>
+    
+    <!-- 私聊提示条 -->
+    <Style Selector="Border.private-chat-bar">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="12,8"/>
+    </Style>
+    
+    <!-- 消息气泡 -->
+    <Style Selector="Border.message-bubble">
+        <Setter Property="Background" Value="{DynamicResource BackgroundTertiaryColor}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="0,4"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    
+    <Style Selector="Border.message-bubble-self">
+        <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="0,4"/>
+    </Style>
+    
+    <!-- 通知样式 -->
+    <Style Selector="Border.notification">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Margin" Value="0,4"/>
+        <Setter Property="BorderThickness" Value="3,0,0,0"/>
+        <Setter Property="BoxShadow" Value="0 2 8 #10000000"/>
+    </Style>
+    
+    <Style Selector="Border.notification-success">
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessColor}"/>
+    </Style>
+    
+    <Style Selector="Border.notification-warning">
+        <Setter Property="BorderBrush" Value="{DynamicResource WarningColor}"/>
+    </Style>
+    
+    <Style Selector="Border.notification-error">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorColor}"/>
+    </Style>
+    
+    <Style Selector="Border.notification-info">
+        <Setter Property="BorderBrush" Value="{DynamicResource InfoColor}"/>
+    </Style>
+    
+    <!-- 监控数据样式 -->
+    <Style Selector="TextBlock.monitor-value">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.monitor-label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+    
+    <!-- 用户列表项 -->
+    <Style Selector="Border.user-item">
+        <Setter Property="Background" Value="{DynamicResource BackgroundTertiaryColor}"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    
+    <Style Selector="Border.user-item:pointerover">
+        <Setter Property="Background" Value="#d0d4dd"/>
+    </Style>
+    
+    <!-- 头像样式 -->
+    <Style Selector="Border.avatar">
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Background" Value="{DynamicResource AccentGradient}"/>
+    </Style>
+    
+    <Style Selector="Border.avatar-small">
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Background" Value="{DynamicResource AccentGradient}"/>
+    </Style>
+    
+</Styles>

@@ -1,10 +1,12 @@
 using SignalRDemo.Server.Hubs;
+using SignalRDemo.Server.Services;
 using SignalRDemo.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<SystemMonitorService>();
 
 // 配置 SignalR
 builder.Services.AddSignalR(options =>

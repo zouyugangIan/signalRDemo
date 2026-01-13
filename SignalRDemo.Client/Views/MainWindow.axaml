@@ -3,137 +3,160 @@
         xmlns:vm="using:SignalRDemo.Client.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="SignalRDemo.Client.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="SignalR Demo - MVVM Chat Client"
-        MinWidth="900" MinHeight="600">
+        Title="SignalR Demo"
+        MinWidth="1000" MinHeight="700">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Window.Styles>
-        <!-- 卡片样式 -->
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltMediumHighBrush}"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
+    <Grid Margin="20" RowDefinitions="Auto,*">
         
-        <!-- 状态指示器样式 -->
-        <Style Selector="Ellipse.status-indicator">
-            <Setter Property="Width" Value="12"/>
-            <Setter Property="Height" Value="12"/>
-        </Style>
-    </Window.Styles>
-
-    <Grid Margin="16" RowDefinitions="Auto,*">
-        
-        <!-- 顶部连接区域 -->
-        <Border Grid.Row="0" Classes="card" Margin="0,0,0,16">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+        <!-- 顶部栏 -->
+        <Border Classes="card" Margin="0,0,0,16">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                
+                <!-- 连接状态和 Logo -->
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                    <!-- 连接状态 -->
-                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Ellipse Classes="status-indicator">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Ellipse Width="12" Height="12">
                             <Ellipse.Fill>
                                 <SolidColorBrush Color="{Binding IsConnected, Converter={x:Static vm:BoolToColorConverter.Instance}}"/>
                             </Ellipse.Fill>
                         </Ellipse>
-                        <TextBlock Text="{Binding ConnectionStatus}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        <TextBlock Text="SignalR Chat" Classes="title" VerticalAlignment="Center"/>
                     </StackPanel>
                     
-                    <Separator Width="1" Background="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-                    
-                    <!-- 服务器地址 -->
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="服务器:" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding ServerUrl}" Width="250" IsEnabled="{Binding !IsConnected}"/>
-                    </StackPanel>
-                    
-                    <!-- 用户名 -->
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="用户名:" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding UserName}" Width="120" IsEnabled="{Binding !IsConnected}"/>
-                    </StackPanel>
+                    <Border Background="#30ffffff" CornerRadius="6" Padding="8,4">
+                        <TextBlock Text="{Binding ConnectionStatus}" Opacity="0.8" FontSize="12"/>
+                    </Border>
                 </StackPanel>
                 
-                <Button Grid.Column="1" Content="连接" Command="{Binding ConnectCommand}" 
-                        Margin="16,0,8,0" Classes="accent"/>
-                <Button Grid.Column="2" Content="断开" Command="{Binding DisconnectCommand}"/>
+                <!-- 连接设置 -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" 
+                            HorizontalAlignment="Center">
+                    <TextBox Text="{Binding ServerUrl}" Width="220" 
+                             Watermark="服务器地址" IsEnabled="{Binding !IsConnected}"/>
+                    <TextBox Text="{Binding UserName}" Width="140" 
+                             Watermark="用户名" IsEnabled="{Binding !IsConnected}"/>
+                    <Button Content="连接" Command="{Binding ConnectCommand}" Classes="accent success"
+                            IsVisible="{Binding !IsConnected}"/>
+                    <Button Content="断开" Command="{Binding DisconnectCommand}" Classes="danger"
+                            IsVisible="{Binding IsConnected}"/>
+                </StackPanel>
+                
+                <!-- 主题切换 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="☀️" FontSize="16" VerticalAlignment="Center"/>
+                    <ToggleSwitch IsChecked="{Binding IsDarkTheme}" 
+                                  OnContent="" OffContent=""/>
+                    <TextBlock Text="🌙" FontSize="16" VerticalAlignment="Center"/>
+                </StackPanel>
             </Grid>
         </Border>
         
-        <!-- 主内容区域 -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,320">
+        <!-- 主内容区 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,340">
             
-            <!-- 左侧: 聊天和消息 -->
-            <Grid RowDefinitions="*,Auto,Auto">
+            <!-- 左侧: 聊天区域 -->
+            <Grid RowDefinitions="*,Auto,Auto" Margin="0,0,16,0">
                 
-                <!-- 聊天消息列表 -->
-                <Border Classes="card" Margin="0,0,16,16">
+                <!-- 消息列表 -->
+                <Border Classes="card">
                     <Grid RowDefinitions="Auto,*">
-                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
-                            <TextBlock Text="💬 聊天消息" FontSize="16" FontWeight="Bold"/>
-                            <Button Grid.Column="1" Content="清空" Command="{Binding ClearMessagesCommand}" 
-                                    Padding="8,4"/>
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="💬" FontSize="20"/>
+                                <TextBlock Text="消息" Classes="title"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="清空" 
+                                    Command="{Binding ClearMessagesCommand}" 
+                                    Classes="icon-btn" Padding="12,6"/>
                         </Grid>
                         
-                        <ListBox Grid.Row="1" ItemsSource="{Binding Messages}" 
-                                 Background="Transparent" BorderThickness="0">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:ChatMessageViewModel}">
-                                    <Border Padding="8" Margin="0,2" CornerRadius="4"
-                                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Text="{Binding User}" FontWeight="Bold" Foreground="#3498db"/>
-                                                <TextBlock Text="{Binding Time}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" FontSize="11"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl ItemsSource="{Binding Messages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:ChatMessageViewModel}">
+                                        <Border Classes="message-bubble" Margin="0,4">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <!-- 头像 -->
+                                                <Border Classes="avatar-small" Margin="0,0,12,0"
+                                                        VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding User, Converter={x:Static vm:NameToInitialConverter.Instance}}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                                </Border>
+                                                
+                                                <StackPanel Grid.Column="1">
+                                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock Text="{Binding User}" FontWeight="Bold" 
+                                                                   Foreground="#6366f1"/>
+                                                        <TextBlock Text="{Binding Time}" FontSize="11" 
+                                                                   Opacity="0.5"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Content}" TextWrapping="Wrap" 
+                                                               Margin="0,6,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
                 
                 <!-- 房间管理 -->
-                <Border Grid.Row="1" Classes="card" Margin="0,0,16,16">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="🏠 房间管理" FontSize="14" FontWeight="Bold"/>
-                        <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                            <TextBox Text="{Binding RoomName}" Watermark="房间名称"/>
-                            <Button Grid.Column="1" Content="加入" Command="{Binding JoinRoomCommand}" Margin="8,0,0,0"/>
-                            <Button Grid.Column="2" Content="离开" Command="{Binding LeaveRoomCommand}" Margin="8,0,0,0"/>
-                            <Button Grid.Column="3" Content="房间发送" Command="{Binding SendRoomMessageCommand}" Margin="8,0,0,0" Classes="accent"/>
-                        </Grid>
-                    </StackPanel>
+                <Border Grid.Row="1" Classes="card" Margin="0,16,0,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                        <TextBlock Text="🏠" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <TextBox Grid.Column="1" Text="{Binding RoomName}" Watermark="房间名称"/>
+                        <Button Grid.Column="2" Content="加入" Command="{Binding JoinRoomCommand}" 
+                                Margin="8,0,0,0"/>
+                        <Button Grid.Column="3" Content="离开" Command="{Binding LeaveRoomCommand}" 
+                                Margin="8,0,0,0"/>
+                        <Button Grid.Column="4" Content="房间发送" Command="{Binding SendRoomMessageCommand}" 
+                                Margin="8,0,0,0" Classes="accent"/>
+                    </Grid>
                 </Border>
                 
-                <!-- 消息输入区域 -->
-                <Border Grid.Row="2" Classes="card" Margin="0,0,16,0">
-                    <Grid RowDefinitions="Auto,Auto">
-                        <!-- 私聊目标 -->
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-                            <TextBlock Text="私聊:" VerticalAlignment="Center"/>
-                            <TextBox Text="{Binding TargetUser}" Width="150" Watermark="目标用户(可选)"/>
-                            <Button Content="私发" Command="{Binding SendPrivateMessageCommand}" Padding="12,4"/>
-                        </StackPanel>
+                <!-- 消息输入区 -->
+                <Border Grid.Row="2" Classes="card" Margin="0,16,0,0">
+                    <StackPanel Spacing="12">
+                        <!-- 私聊提示条 -->
+                        <Border Classes="private-chat-bar" IsVisible="{Binding IsPrivateChatMode}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="🔒" FontSize="16"/>
+                                    <TextBlock Text="私聊 " Foreground="White"/>
+                                    <TextBlock Text="{Binding TargetUser}" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="✕ 取消" 
+                                        Command="{Binding CancelPrivateChatCommand}"
+                                        Background="Transparent" Foreground="White" 
+                                        Padding="8,4" CornerRadius="4"/>
+                            </Grid>
+                        </Border>
                         
-                        <!-- 消息输入 -->
-                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                        <!-- 输入框 -->
+                        <Grid ColumnDefinitions="*,Auto">
                             <TextBox Text="{Binding Message}" Watermark="输入消息..." 
                                      AcceptsReturn="False"/>
-                            <Button Grid.Column="1" Content="发送" Command="{Binding SendMessageCommand}" 
-                                    Margin="8,0,0,0" Classes="accent" MinWidth="80"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="📤 私发" Command="{Binding SendPrivateMessageCommand}" 
+                                        IsVisible="{Binding IsPrivateChatMode}"
+                                        Margin="12,0,0,0" Classes="accent"/>
+                                <Button Content="📤 发送" Command="{Binding SendMessageCommand}" 
+                                        IsVisible="{Binding !IsPrivateChatMode}"
+                                        Margin="12,0,0,0" Classes="accent"/>
+                            </StackPanel>
                         </Grid>
-                    </Grid>
+                    </StackPanel>
                 </Border>
             </Grid>
             
@@ -142,31 +165,59 @@
                 
                 <!-- 实时监控 -->
                 <Border Classes="card" Margin="0,0,0,16">
-                    <StackPanel Spacing="12">
+                    <StackPanel Spacing="16">
                         <Grid ColumnDefinitions="*,Auto,Auto">
-                            <TextBlock Text="📊 实时监控" FontSize="16" FontWeight="Bold"/>
-                            <Button Grid.Column="1" Content="开始" Command="{Binding StartMonitoringCommand}" 
-                                    Padding="8,4" Margin="0,0,8,0"/>
-                            <Button Grid.Column="2" Content="停止" Command="{Binding StopMonitoringCommand}" 
-                                    Padding="8,4"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="📊" FontSize="20"/>
+                                <TextBlock Text="系统监控" Classes="title"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="开始" 
+                                    Command="{Binding StartMonitoringCommand}"
+                                    Padding="12,6" Margin="0,0,8,0"/>
+                            <Button Grid.Column="2" Content="停止" 
+                                    Command="{Binding StopMonitoringCommand}"
+                                    Padding="12,6"/>
                         </Grid>
                         
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
-                            <TextBlock Grid.Row="0" Text="CPU:" VerticalAlignment="Center"/>
-                            <ProgressBar Grid.Row="0" Grid.Column="1" Value="{Binding CpuUsage}" Maximum="100" Margin="8,0"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding CpuUsage, StringFormat={}{0:F1}%}" Width="50"/>
+                        <!-- 监控数据 -->
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*">
+                            <!-- CPU -->
+                            <Border Background="#20ffffff" CornerRadius="8" Padding="12" Margin="0,0,6,6">
+                                <StackPanel>
+                                    <TextBlock Text="CPU" Classes="monitor-label"/>
+                                    <TextBlock Text="{Binding CpuUsage, StringFormat={}{0:F1}%}" 
+                                               Classes="monitor-value" Margin="0,4,0,0"/>
+                                    <ProgressBar Value="{Binding CpuUsage}" Maximum="100" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
                             
-                            <TextBlock Grid.Row="1" Text="内存:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <ProgressBar Grid.Row="1" Grid.Column="1" Value="{Binding MemoryUsage}" Maximum="100" Margin="8,8,8,0"/>
-                            <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding MemoryUsage, StringFormat={}{0:F1}%}" Width="50" Margin="0,8,0,0"/>
+                            <!-- 内存 -->
+                            <Border Grid.Column="1" Background="#20ffffff" CornerRadius="8" Padding="12" Margin="6,0,0,6">
+                                <StackPanel>
+                                    <TextBlock Text="内存" Classes="monitor-label"/>
+                                    <TextBlock Text="{Binding MemoryUsage, StringFormat={}{0:F1}%}" 
+                                               Classes="monitor-value" Margin="0,4,0,0"/>
+                                    <ProgressBar Value="{Binding MemoryUsage}" Maximum="100" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
                             
-                            <TextBlock Grid.Row="2" Text="入流量:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" 
-                                       Text="{Binding NetworkIn, StringFormat={}{0:F1} MB/s}" Margin="8,8,0,0"/>
+                            <!-- 入流量 -->
+                            <Border Grid.Row="1" Background="#20ffffff" CornerRadius="8" Padding="12" Margin="0,6,6,0">
+                                <StackPanel>
+                                    <TextBlock Text="入流量" Classes="monitor-label"/>
+                                    <TextBlock Text="{Binding NetworkIn, StringFormat={}{0:F1} MB/s}" 
+                                               Classes="monitor-value" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
                             
-                            <TextBlock Grid.Row="3" Text="出流量:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" 
-                                       Text="{Binding NetworkOut, StringFormat={}{0:F1} MB/s}" Margin="8,8,0,0"/>
+                            <!-- 出流量 -->
+                            <Border Grid.Row="1" Grid.Column="1" Background="#20ffffff" CornerRadius="8" Padding="12" Margin="6,6,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="出流量" Classes="monitor-label"/>
+                                    <TextBlock Text="{Binding NetworkOut, StringFormat={}{0:F1} MB/s}" 
+                                               Classes="monitor-value" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -174,57 +225,76 @@
                 <!-- 在线用户 -->
                 <Border Grid.Row="1" Classes="card" Margin="0,0,0,16">
                     <Grid RowDefinitions="Auto,*">
-                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
-                            <TextBlock Text="👥 在线用户" FontSize="16" FontWeight="Bold"/>
-                            <Button Grid.Column="1" Content="刷新" Command="{Binding RefreshOnlineUsersCommand}" 
-                                    Padding="8,4"/>
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="👥" FontSize="20"/>
+                                <TextBlock Text="在线用户" Classes="title"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="刷新" 
+                                    Command="{Binding RefreshOnlineUsersCommand}"
+                                    Padding="12,6"/>
                         </Grid>
                         
-                        <ListBox Grid.Row="1" ItemsSource="{Binding OnlineUsers}" 
-                                 Background="Transparent" BorderThickness="0">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="4">
-                                        <Ellipse Width="8" Height="8" Fill="#2ecc71"/>
-                                        <TextBlock Text="{Binding UserName}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl ItemsSource="{Binding OnlineUsers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Classes="user-item-btn" Margin="0,4"
+                                                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectUserCommand, FallbackValue={x:Null}}"
+                                                CommandParameter="{Binding}">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Border Classes="avatar-small" Margin="0,0,10,0">
+                                                    <TextBlock Text="{Binding UserName, Converter={x:Static vm:NameToInitialConverter.Instance}}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="White" FontWeight="Bold" FontSize="11"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding UserName}" FontWeight="Medium"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <Ellipse Classes="status-online" Width="6" Height="6"/>
+                                                        <TextBlock Text="在线" FontSize="10" Opacity="0.6"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
                 
                 <!-- 系统通知 -->
                 <Border Grid.Row="2" Classes="card" MaxHeight="200">
                     <Grid RowDefinitions="Auto,*">
-                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
-                            <TextBlock Text="🔔 系统通知" FontSize="16" FontWeight="Bold"/>
-                            <Button Grid.Column="1" Content="清空" Command="{Binding ClearNotificationsCommand}" 
-                                    Padding="8,4"/>
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="🔔" FontSize="20"/>
+                                <TextBlock Text="通知" Classes="title"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="清空" 
+                                    Command="{Binding ClearNotificationsCommand}"
+                                    Padding="12,6"/>
                         </Grid>
                         
-                        <ListBox Grid.Row="1" ItemsSource="{Binding Notifications}" 
-                                 Background="Transparent" BorderThickness="0">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vm:SystemNotificationViewModel}">
-                                    <Border Padding="6" Margin="0,2" CornerRadius="4"
-                                            BorderThickness="2,0,0,0">
-                                        <Border.BorderBrush>
-                                            <SolidColorBrush Color="{Binding TypeColor}"/>
-                                        </Border.BorderBrush>
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
-                                                <TextBlock Text="{Binding Time}" FontSize="10" 
-                                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl ItemsSource="{Binding Notifications}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:SystemNotificationViewModel}">
+                                        <Border Classes="notification notification-info" Margin="0,2">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding Time}" FontSize="10" Opacity="0.5"/>
+                                                </StackPanel>
+                                            <TextBlock Text="{Binding Content}" FontSize="12" 
+                                                       Opacity="0.8" TextWrapping="Wrap" Margin="0,4,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="11" 
-                                                       Margin="0,2,0,0" Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
             </Grid>

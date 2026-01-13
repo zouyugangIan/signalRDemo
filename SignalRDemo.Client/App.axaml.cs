@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using SignalRDemo.Client.ViewModels;
 using SignalRDemo.Client.Views;
+using SignalRDemo.Client.Services;
 
 namespace SignalRDemo.Client;
 
@@ -14,6 +15,9 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        
+        // 初始化主题服务
+        ThemeService.Instance.Initialize(AppTheme.Dark);
     }
 
     public override void OnFrameworkInitializationCompleted()

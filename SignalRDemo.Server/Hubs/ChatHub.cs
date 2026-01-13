@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using SignalRDemo.Shared;
 using SignalRDemo.Shared.DTOs;
 using SignalRDemo.Shared.Hubs;
+using SignalRDemo.Server.Services;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
@@ -19,10 +20,12 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
     private static readonly ConcurrentDictionary<string, SortedDictionary<int, byte[]>> _fileChunks = new();
 
     private readonly ILogger<ChatHub> _logger;
+    private readonly SystemMonitorService _monitor;
 
-    public ChatHub(ILogger<ChatHub> logger)
+    public ChatHub(ILogger<ChatHub> logger, SystemMonitorService monitor)
     {
         _logger = logger;
+        _monitor = monitor;
     }
 
     #region 连接生命周期
@@ -194,16 +197,15 @@ public class ChatHub : Hub<IChatHubClient>, IChatHub
     public async IAsyncEnumerable<MonitoringDataPoint> StreamMonitoringData(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var random = new Random();
-
         while (!cancellationToken.IsCancellationRequested)
         {
+            // 使用真实系统数据
             var dataPoint = new MonitoringDataPoint(
                 DateTime.UtcNow,
-                random.NextDouble() * 100,        // CPU 使用率
-                random.NextDouble() * 100,        // 内存使用率
-                random.NextDouble() * 1000,       // 网络入流量 (MB/s)
-                random.NextDouble() * 1000        // 网络出流量 (MB/s)
+                _monitor.GetCpuUsage(),
+                _monitor.GetMemoryUsage(),
+                _monitor.GetNetworkBytesReceivedPerSec(),
+                _monitor.GetNetworkBytesSentPerSec()
             );
 
             yield return dataPoint;

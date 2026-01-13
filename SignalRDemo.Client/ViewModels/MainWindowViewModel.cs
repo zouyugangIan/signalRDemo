@@ -44,6 +44,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isMonitoring;
 
     [ObservableProperty]
+    private bool _isPrivateChatMode;
+
+    [ObservableProperty]
     private string _connectionStatus = "未连接";
 
     [ObservableProperty]
@@ -57,6 +60,26 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private double _networkOut;
+
+    [ObservableProperty]
+    private ConnectionStatus? _selectedUser;
+
+    [ObservableProperty]
+    private bool _isDarkTheme = true;
+
+    partial void OnSelectedUserChanged(ConnectionStatus? value)
+    {
+        if (value != null && value.UserName != UserName)
+        {
+            TargetUser = value.UserName;
+            IsPrivateChatMode = true;
+        }
+    }
+
+    partial void OnIsDarkThemeChanged(bool value)
+    {
+        ThemeService.Instance.SetTheme(value ? AppTheme.Dark : AppTheme.Light);
+    }
 
     #endregion
 
@@ -146,9 +169,28 @@ public partial class MainWindowViewModel : ViewModelBase
 
         await _signalRService.SendMessageToUserAsync(TargetUser, Message);
         Message = string.Empty;
+        // 发送后保持私聊模式，方便继续对话
     }
 
     private bool CanSendPrivateMessage() => IsConnected && !string.IsNullOrWhiteSpace(Message) && !string.IsNullOrWhiteSpace(TargetUser);
+
+    [RelayCommand]
+    private void CancelPrivateChat()
+    {
+        IsPrivateChatMode = false;
+        TargetUser = string.Empty;
+        SelectedUser = null;
+    }
+
+    [RelayCommand]
+    private void SelectUser(ConnectionStatus? user)
+    {
+        if (user != null && user.UserName != UserName)
+        {
+            TargetUser = user.UserName;
+            IsPrivateChatMode = true;
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanJoinRoom))]
     private async Task JoinRoomAsync()
