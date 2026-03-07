@@ -16,6 +16,14 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ISignalRService _signalRService;
     private CancellationTokenSource? _monitoringCts;
+    
+    private static string ResolveDefaultServerUrl()
+    {
+        var fromEnv = Environment.GetEnvironmentVariable("SIGNALRDEMO_SERVER_URL");
+        return string.IsNullOrWhiteSpace(fromEnv)
+            ? HubConstants.DefaultServerUrl
+            : fromEnv.Trim();
+    }
 
     #region Observable Properties
 
@@ -23,7 +31,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _userName = $"User_{Random.Shared.Next(1000, 9999)}";
 
     [ObservableProperty]
-    private string _serverUrl = HubConstants.DefaultServerUrl;
+    private string _serverUrl = ResolveDefaultServerUrl();
 
     [ObservableProperty]
     private string _message = string.Empty;
@@ -79,10 +87,12 @@ public partial class MainWindowViewModel : ViewModelBase
     
     partial void OnSelectedChannelChanged(ChatChannelViewModel? value)
     {
-         if (value != null)
-         {
-             value.HasUnreadMessages = false;
-         }
+        if (value != null)
+        {
+            value.HasUnreadMessages = false;
+        }
+
+        SendMessageCommand.NotifyCanExecuteChanged();
     }
 
     #endregion
@@ -225,6 +235,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private void StartChat(ChatChannelViewModel channel)
     {
         SelectedChannel = channel;
+    }
+
+    [RelayCommand]
+    private void SelectUser(ConnectionStatus? user)
+    {
+        if (user == null || user.UserName == UserName) return;
+        OpenPrivateChat(user.UserName);
     }
 
     [RelayCommand(CanExecute = nameof(CanCreateRoom))]
@@ -600,11 +617,6 @@ public partial class MainWindowViewModel : ViewModelBase
         SendMessageCommand.NotifyCanExecuteChanged();
     }
     
-    partial void OnSelectedChannelChanged(ChatChannelViewModel? value)
-    {
-        SendMessageCommand.NotifyCanExecuteChanged();
-    }
-
     partial void OnNewRoomNameChanged(string value)
     {
         CreateRoomCommand.NotifyCanExecuteChanged();

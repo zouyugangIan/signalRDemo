@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SignalRDemo.Client.ViewModels"
+        xmlns:dto="using:SignalRDemo.Shared.DTOs"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
@@ -79,12 +80,10 @@
                                      <ItemsControl.ItemTemplate>
                                          <DataTemplate DataType="{x:Type vm:ChatChannelViewModel}">
                                              <Border Classes="user-item-btn" Background="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedChannel, Converter={x:Static vm:SelectionToBackgroundConverter.Instance}, ConverterParameter={Binding}}"
-                                                     PointerPressedCommand="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).StartChatCommand}" 
-                                                     PointerPressedCommandParameter="{Binding}"
                                                      Cursor="Hand">
                                                  <!-- Note: Using Button for interaction is easier but listbox selection model is better. 
                                                       Here trying to simulate channel list. -->
-                                                 <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectedChannel, Mode=OneWayToSource}"
+                                                 <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).StartChatCommand}"
                                                          CommandParameter="{Binding}"
                                                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                                          Background="Transparent" BorderThickness="0">
@@ -114,22 +113,18 @@
                                  <TextBlock Text="可用房间" Opacity="0.6" FontSize="12" Margin="0,0,0,4"/>
                                  <ItemsControl ItemsSource="{Binding AvailableRooms}">
                                      <ItemsControl.ItemTemplate>
-                                         <DataTemplate>
-                                             <Button Content="{Binding RoomName}" 
+                                         <DataTemplate DataType="{x:Type dto:RoomInfo}">
+                                             <Button
                                                      Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).JoinSelectedRoomCommand}"
                                                      CommandParameter="{Binding}"
                                                      HorizontalAlignment="Stretch" 
                                                      HorizontalContentAlignment="Left"
                                                      Background="#10ffffff" Margin="0,2">
-                                                 <Button.ContentTemplate>
-                                                      <DataTemplate>
-                                                           <Grid ColumnDefinitions="*,Auto">
-                                                               <TextBlock Text="{Binding RoomName}"/>
-                                                               <TextBlock Grid.Column="1" Text="{Binding UserCount, StringFormat='({0}人)'}" 
-                                                                          FontSize="11" Opacity="0.6"/>
-                                                           </Grid>
-                                                      </DataTemplate>
-                                                 </Button.ContentTemplate>
+                                                 <Grid ColumnDefinitions="*,Auto">
+                                                     <TextBlock Text="{Binding RoomName}"/>
+                                                     <TextBlock Grid.Column="1" Text="{Binding UserCount, StringFormat='({0}人)'}" 
+                                                                FontSize="11" Opacity="0.6"/>
+                                                 </Grid>
                                              </Button>
                                          </DataTemplate>
                                      </ItemsControl.ItemTemplate>
